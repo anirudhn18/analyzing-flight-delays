@@ -1,5 +1,4 @@
-
-#Only msp dataset
+rm(list = ls())
 
 setwd("C:/Users/Anirudh Narayanan/Desktop/Some stuff/msba stuff/Summer/Stats/msba-stats-project/codes")
 
