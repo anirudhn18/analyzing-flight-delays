@@ -14,10 +14,15 @@ colnames(weather)[colnames(weather) == 'location'] <- 'ORIGIN'
 final = merge(x = delays, y = weather, by = c('FL_DATE','ORIGIN'), all.x=T)
 
 
-model_data = final[which(final$DEP_DELAY >= 10 & final$ORIGIN == 'MSP' ),]
-model_data = final[which(final$ORIGIN == 'MSP'),]
-model_data$delay_treated = ifelse(model_data$DEP_DELAY>= 330,330,model_data$DEP_DELAY)
-model_data$ln_delay = log(model_data$DEP_DELAY + 1)
+# model_data = final[which(final$DEP_DELAY >= 45 & final$ORIGIN == 'MSP' ),]
+model_data = final[which(final$ORIGIN == 'DFW' & is.na(final$DEP_DELAY)==F),]
+
+
+##TREATMENT OF Y VARIABLE
+# model_data$delay_treated = ifelse(model_data$DEP_DELAY>= 330,330,model_data$DEP_DELAY)
+model_data$delay2 = ifelse(model_data$DEP_DELAY < 0, 0 ,model_data$DEP_DELAY)
+model_data$log_delay2 = log10(model_data$delay2 + 1)
+
 
 ##HAS EVENTS?
 model_data$has_events = ifelse(nchar(model_data$events)>0, 1,0)
@@ -36,15 +41,23 @@ model_data$is_weekend = ifelse(model_data$DAY_OF_WEEK > 4, 1,0)
 ##HOUR OF DEPARTURE
 model_data$dep_hr = model_data$CRS_DEP_TIME%/%100
 
-summary(lm(delay_treated ~
+
+##SEASONS
+model_data$season = ifelse(model_data$MONTH %in% c(12,1,2),1,
+                    ifelse(model_data$MONTH %in% c(3,4,5),2,
+                    ifelse(model_data$MONTH %in% c(6,7,8,9),3,4)))
+
+summary(lm( log_delay2 ~
             min_visibilitymiles +
             min_temperaturef +
             min_visibilitymiles +
             winddirdegrees +
-            as.factor(events) +
-            airline_class +
-            QUARTER +
-            AIR_TIME +
+            factor(events) +
+            factor(airline_class) +
+            factor(season) +
+            factor(QUARTER) +
+            DISTANCE +
             dep_hr
             ,
+           # data = model_data[which(model_data$DEP_DELAY > 0),]))
            data = model_data))
