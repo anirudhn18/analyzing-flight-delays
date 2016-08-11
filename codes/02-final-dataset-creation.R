@@ -15,7 +15,7 @@ final = merge(x = delays, y = weather, by = c('FL_DATE','ORIGIN'), all.x=T)
 
 
 # model_data = final[which(final$DEP_DELAY >= 45 & final$ORIGIN == 'MSP' ),]
-model_data = final[which(final$ORIGIN == 'DFW' & is.na(final$DEP_DELAY)==F),]
+model_data = final[which(final$ORIGIN == 'MSP' & is.na(final$DEP_DELAY)==F),]
 
 
 ##TREATMENT OF Y VARIABLE
@@ -34,12 +34,20 @@ model_data$airline_class = ifelse(model_data$AIRLINE_ID %in% c(19805,19790,19393
                                                           20422),
                                   1,0)
 
-
+## log DISTANCE
+model_data$ln_dist = log(model_data$DISTANCE)
 ##IS WEEKEND?
 model_data$is_weekend = ifelse(model_data$DAY_OF_WEEK > 4, 1,0)
 
+
 ##HOUR OF DEPARTURE
 model_data$dep_hr = model_data$CRS_DEP_TIME%/%100
+
+
+#TIME OF DAY
+model_data$time_of_day = ifelse(model_data$dep_hr %in% c(1,2,3,23,24), 'night',
+                  ifelse(model_data$dep_hr %in% c(4:10), 'morning',
+                  ifelse(model_data$dep_hr %in% c(11:15), 'afternoon','evening')))
 
 
 ##SEASONS
@@ -47,17 +55,33 @@ model_data$season = ifelse(model_data$MONTH %in% c(12,1,2),1,
                     ifelse(model_data$MONTH %in% c(3,4,5),2,
                     ifelse(model_data$MONTH %in% c(6,7,8,9),3,4)))
 
-summary(lm( log_delay2 ~
-            min_visibilitymiles +
-            min_temperaturef +
-            min_visibilitymiles +
-            winddirdegrees +
-            factor(events) +
-            factor(airline_class) +
-            factor(season) +
-            factor(QUARTER) +
-            DISTANCE +
-            dep_hr
-            ,
-           # data = model_data[which(model_data$DEP_DELAY > 0),]))
-           data = model_data))
+#TREATING PRECIPITATION
+model_data$prec_new = as.numeric(ifelse(model_data$precipitationin == 'T', 0,
+                             model_data$precipitationin))
+
+
+model_msp = lm( log_delay2 ~
+                          min_temperaturef +
+                          cloudcover +
+                          min_visibilitymiles +
+                          mean_wind_speedmph + 
+                          max_gust_speedmph + 
+                          min_humidity + 
+                          winddirdegrees +
+                          factor(events) +
+                          factor(airline_class) +
+                          factor(season) +
+                          ln_dist +
+                          prec_new +
+                          time_of_day +
+                          factor(is_weekend)
+                        , data = model_data)
+
+summary(model_msp)
+rstd_model = rstandard(model_msp)
+rstd_sample = sample(rstd_model,size = 5000, replace = F)
+shapiro.test(rstd_sample)
+
+cor(model_data[,c(24,41,36,38,39,27,30,43,48,53)])
+
+data.frame(cbind(colnames(model_data),c(1:ncol(model_data))))
