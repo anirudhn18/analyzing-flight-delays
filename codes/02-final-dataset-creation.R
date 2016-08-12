@@ -4,15 +4,21 @@ setwd("C:/Users/Anirudh Narayanan/Desktop/Some stuff/msba stuff/Summer/Stats/msb
 
 dataloc = '../data/final/'
 delays = read.csv(paste0(dataloc,'final_delay_data.csv'),stringsAsFactors = F)
-
+delays$FL_DATE = as.Date(delays$FL_DATE)
 
 weather = read.csv(paste0(dataloc,'final_weather_data.csv'),stringsAsFactors = F)
 colnames(weather)[colnames(weather) == 'FLDATE'] <- 'FL_DATE'
 colnames(weather)[colnames(weather) == 'location'] <- 'ORIGIN'
+weather$FL_DATE = as.Date(weather$FL_DATE)
 
+weather_prev = weather
+weather_prev$FL_DATE = weather_prev$FL_DATE + 1
+colnames(weather_prev) = paste0(colnames(weather_prev),"_prev")
+colnames(weather_prev)[colnames(weather_prev) == 'FL_DATE_prev'] <- 'FL_DATE'
+colnames(weather_prev)[colnames(weather_prev) == 'ORIGIN_prev'] <- 'ORIGIN'
 
-final = merge(x = delays, y = weather, by = c('FL_DATE','ORIGIN'), all.x=T)
-
+final_inter = merge(x = delays, y = weather, by = c('FL_DATE','ORIGIN'), all.x=T)
+final = merge(x = final_inter, y = weather_prev, by = c('FL_DATE','ORIGIN'),all.x=T)
 
 # model_data = final[which(final$DEP_DELAY >= 45 & final$ORIGIN == 'MSP' ),]
 model_data = final[which(final$ORIGIN == 'MSP' & is.na(final$DEP_DELAY)==F),]
@@ -23,7 +29,7 @@ model_data = final[which(final$ORIGIN == 'MSP' & is.na(final$DEP_DELAY)==F),]
 model_data$delay2 = ifelse(model_data$DEP_DELAY < 0, 0 ,model_data$DEP_DELAY)
 model_data$log_delay2 = log10(model_data$delay2 + 1)
 
-
+  
 ##HAS EVENTS?
 model_data$has_events = ifelse(nchar(model_data$events)>0, 1,0)
 
@@ -58,6 +64,10 @@ model_data$season = ifelse(model_data$MONTH %in% c(12,1,2),1,
 #TREATING PRECIPITATION
 model_data$prec_new = as.numeric(ifelse(model_data$precipitationin == 'T', 0,
                              model_data$precipitationin))
+model_data$prec_new_prev = as.numeric(ifelse(model_data$precipitationin_prev   == 'T', 0,
+                                        model_data$precipitationin_prev))
+
+
 
 
 model_msp = lm( log_delay2 ~
@@ -69,8 +79,10 @@ model_msp = lm( log_delay2 ~
                           min_humidity + 
                           winddirdegrees +
                           factor(events) +
+                          factor(events_prev) +
                           factor(airline_class) +
                           factor(season) +
+                          cloudcover_prev + 
                           ln_dist +
                           prec_new +
                           time_of_day +
@@ -78,10 +90,14 @@ model_msp = lm( log_delay2 ~
                         , data = model_data)
 
 summary(model_msp)
+
+cor(model_data[,c(41,64)])
+
+
 rstd_model = rstandard(model_msp)
 rstd_sample = sample(rstd_model,size = 5000, replace = F)
 shapiro.test(rstd_sample)
 
 cor(model_data[,c(24,41,36,38,39,27,30,43,48,53)])
 
-data.frame(cbind(colnames(model_data),c(1:ncol(model_data))))
+columns = data.frame(cbind(colnames(model_data),c(1:ncol(model_data))))
