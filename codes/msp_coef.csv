@@ -1,0 +1,34 @@
+"","x"
+"(Intercept)",1.22083086426777
+"min_temperaturef",-0.013053425763409
+"cloudcover",0.00733296174931889
+"min_visibilitymiles",0.00459694944669246
+"mean_wind_speedmph",0.00822653418461913
+"max_gust_speedmph",0.00368211619992769
+"min_humidity",0.00218022413365631
+"factor(events)Fog",0.0973924347994729
+"factor(events)Fog-Rain-Thunderstorm",0.404294153327595
+"factor(events)Fog-Snow",0.520779160937309
+"factor(events)Rain",0.0449959048219795
+"factor(events)Rain-Snow",0.388836448903824
+"factor(events)Rain-Snow-Thunderstorm",0.0804298253199753
+"factor(events)Rain-Thunderstorm",0.124890190268484
+"factor(events)Snow",0.191053913556754
+"factor(airline_class)1",0.0366132887968628
+"relevel(factor(MONTH), ref = ""6"")1",-0.688563006702154
+"relevel(factor(MONTH), ref = ""6"")2",-0.72301678325302
+"relevel(factor(MONTH), ref = ""6"")3",-0.601823489488082
+"relevel(factor(MONTH), ref = ""6"")4",-0.577142829524632
+"relevel(factor(MONTH), ref = ""6"")5",-0.390313986579983
+"relevel(factor(MONTH), ref = ""6"")7",-0.0843472433649356
+"relevel(factor(MONTH), ref = ""6"")8",-0.180946380019849
+"relevel(factor(MONTH), ref = ""6"")9",-0.372503057309694
+"relevel(factor(MONTH), ref = ""6"")10",-0.59701787454625
+"relevel(factor(MONTH), ref = ""6"")11",-0.626372425419721
+"relevel(factor(MONTH), ref = ""6"")12",-0.659415936830598
+"ln_dist",0.0629525105347345
+"prec_new",0.320308988220915
+"relevel(factor(time_of_day), ref = ""evening"")afternoon",-0.289780566563566
+"relevel(factor(time_of_day), ref = ""evening"")morning",-0.536175396188937
+"relevel(factor(time_of_day), ref = ""evening"")night",0.482642692643788
+"factor(is_weekend)1",-0.0495133699869099

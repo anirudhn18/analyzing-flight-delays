@@ -27,7 +27,7 @@ model_data = final[which(final$ORIGIN == 'MSP' & is.na(final$DEP_DELAY)==F),]
 ##TREATMENT OF Y VARIABLE
 # model_data$delay_treated = ifelse(model_data$DEP_DELAY>= 330,330,model_data$DEP_DELAY)
 model_data$delay2 = ifelse(model_data$DEP_DELAY < 0, 0 ,model_data$DEP_DELAY)
-model_data$log_delay2 = log10(model_data$delay2 + 1)
+model_data$log_delay2 = log(model_data$delay2 + 1)
 
   
 ##HAS EVENTS?
@@ -57,9 +57,9 @@ model_data$time_of_day = ifelse(model_data$dep_hr %in% c(1,2,3,23,24), 'night',
 
 
 ##SEASONS
-model_data$season = ifelse(model_data$MONTH %in% c(12,1,2),1,
-                    ifelse(model_data$MONTH %in% c(3,4,5),2,
-                    ifelse(model_data$MONTH %in% c(6,7,8,9),3,4)))
+model_data$season = ifelse(model_data$MONTH %in% c(12,1,2),'Winter',
+                    ifelse(model_data$MONTH %in% c(3,4,5),'Spring',
+                    ifelse(model_data$MONTH %in% c(6,7,8,9),'Summer','Fall')))
 
 #TREATING PRECIPITATION
 model_data$prec_new = as.numeric(ifelse(model_data$precipitationin == 'T', 0,
@@ -67,29 +67,29 @@ model_data$prec_new = as.numeric(ifelse(model_data$precipitationin == 'T', 0,
 model_data$prec_new_prev = as.numeric(ifelse(model_data$precipitationin_prev   == 'T', 0,
                                         model_data$precipitationin_prev))
 
-
+table(model_data$events)
 
 
 model_msp = lm( log_delay2 ~
                           min_temperaturef +
                           cloudcover +
+                          # min_sea_level_pressurein+
                           min_visibilitymiles +
                           mean_wind_speedmph + 
                           max_gust_speedmph + 
                           min_humidity + 
-                          winddirdegrees +
                           factor(events) +
-                          factor(events_prev) +
                           factor(airline_class) +
-                          factor(season) +
-                          cloudcover_prev + 
+                          relevel(factor(MONTH), ref = '6') +
                           ln_dist +
                           prec_new +
-                          time_of_day +
+                          relevel(factor(time_of_day),ref = 'evening') +
                           factor(is_weekend)
                         , data = model_data)
 
 summary(model_msp)
+
+write.csv(model_msp$coefficients,'msp_coef.csv')
 
 cor(model_data[,c(41,64)])
 
