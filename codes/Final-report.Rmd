@@ -1,0 +1,158 @@
+---
+title: "A study on the factors affecting flight delays"
+subtitle: "MSBA 6210 Project Report"
+output: html_document
+author: Anirudh Narayanan, Hamsika Venkataramanan, Hanyuan Chi, Zihao Jiang
+date: 08/19/2016
+---
+```{r, include=FALSE}
+library(ggplot2)
+```
+
+```{r setup, include=FALSE}
+setwd('C:/Users/Anirudh Narayanan/Google Drive/Summer/Stats/msba-stats-project/codes')
+# source('02-final-dataset-creation.R')
+
+load('objects.RData')
+```
+
+##<b>Introduction</b>
+Flight delays are not beneficial to any of the parties involved. For the passangers, it is a nuisance that disrupts their best-laid plans. For the airports, it sets a dominoes effect off where most subsequent flights are impacted to various extents. The airlines themselves suffer reputational damage in addition to financial damages. Hence, a comprehensive understanding of what drives flight delays would be a good start to addressing this issue.
+
+### Problem Scope
+Our aim was to understand the major factors driving delays. We decided to consider delays at two major airports and contrast the results. This would allow us to check if factors at different airports have different impacts on flight delays.
+For this exercise, we chose Minneapolis - St. Paul (MSP) and Dallas/Fort Worth (DFW) International Airports. These airports were chosen because of their similarity in scale of operation and geographic and climatic differences. For example, snow was a common occurence in MSP and the staff there should be much better equipped at dealing with it as compared to DFW.
+
+## <b>Data Sources and Description</b>
+The data was obtained from the United States Department of Transportation (Bureau of Transportation Statistics) for a period of 12 months from January 2015 to December 2015. Weather data for each day wass obtained from Wunderground.com.  
+<b><i>Delay Data</i></b>: <href>http://www.transtats.bts.gov/</href>  
+<b><i>Weather Data</i></b>:<href>https://www.wunderground.com/history/</href>
+
+### Response Variable
+<i>Minutes of delay</i> was the response variable used to build the model. Flights which departed earlier than scheduled were set to 0 values. A look at the distribution of the response showed us that it was right skewed. Hence, we considered <i>log of departure delays</i> as our response variable.
+
+```{r,echo=FALSE,message=FALSE}
+ggplot(model_data, aes(DEP_DELAY)) + geom_histogram()
+```
+
+### Predictors
+Predictor variables were considered from two broad categories - weather conditions and flight logistics. For weather conditions, variables like precipitation, temperature, visibility and special events were considered. For flight logistics, variables like major vs minor airlines, time of day and season were considered.  
+
+* Friday through Sunday were defined as weekends
+* Time of Departure of the flight were categorized into 'Night' (2300 - 0400), 'Morning' (0400 - 1100), 'Afternoon' (1100 - 1600) and 'Evening' (1600 - 2200)
+* We classified all airlines into <a href = 'https://en.wikipedia.org/wiki/List_of_largest_airlines_in_North_America'>major/minor airlines</a> (considering top 20 as major and the rest as minor)
+* Weather factors are available at a day level. We extend those conditions to all the hours in the day as an approximation
+
+
+##<b>Analysis</b>
+
+### Hypotheses
+We had a few intuitions going into the analysis regarding the impact of some of the variables.  
+
+* We expected snow and other forms of precipitation to have a negative impact in both airports. However, the impact of snow would be much higher in DFW than MSP. Extending this to seasons, we expected fall-winter to be worse than spring-summer
+* We expected weekends to have higher delays as they would be busier. Extending this to time of day, we expected evening and afternoon flights to be delayed more
+* Major airlines were expected to fare better due to the resources available as compared to minor airlines
+* We expected long-distance flights are more susceptible to delays as there is higher amount of preparation invovled
+
+
+### Model Selection
+Given the number of predictor variables, the best fitting model was decided by backward selection rather than by forward substitution. We started with all possible, logically intuitive predictors in our model which includes logistic, weather variables for the current as well as for the previous day. The best fit model was arrived at when the removal of extra predictors did not have a positive impact on R squared or failed to reduce the standard error.
+
+##<b>Results and Findings</b>
+
+### Model explainability
+The models for MSP and DFW were able to explain \~6% and \~10% of the respective variation in flight delays. Thus, we aren't able to achieve the desired comprehensiveness in terms of explaining delays. However, the factors that we did include were significant ones.
+
+### Similarities
+Although the scale might be different, weather conditions seem to have similar impacts on both airports
+
+* As expected, weather wreaks havoc on flights in terms of delays. An inch increase in precipiation leads to a \~<b>32%</b> increase in delays for MSP and a \~<b>10%</b> increase in delays for DFW
+* <b>June</b> was found to have the highest amount of delays in both airports. This is contrary to our expectation that delays should be highest in winter months
+* <b>Flight distance</b> was also found to have similar impacts in both locations. A 10% increase flight distance causes a \~<b>0.6%</b> and \~<b>1%</b> increase in delays for MSP and DFW respectively. This is supportive of our initial intuitions
+* Weather events occuring in conjunction cause more delays than individual events. The most disruptive combinations are <b>Rain-Snow-Thunderstorm</b> for DFW and <b>Fog-Snow</b> for MSP, causing \~<b>130%</b> and \~<b>52%</b> more delays than event-free days respectively.
+
+
+### Contrasts
+A few conditions were observed to have contrasting impacts in the two airports.
+
+* <b>Sea level pressure</b> turned out to be significant factor in DFW whereas it did not in MSP. This could be attributed to the susceptibility of DFW to thunderstorms which form in low-pressure zones
+* Major airlines were found to do better than minor in DFW (as was expected). The trend in MSP was flipped. Major airlines had \~<b>4%</b> more delays than minor ones in MSP. This is contrary to our initial intuitions
+* With respect to time of the day, <b>evenings</b> are the worst in DFW whereas <b>nights</b> are the worst in MSP.
+* Flight delays are worse on weekends for DFW but better for MSP. The latter is contrary, again, to our initial expectations on this matter.
+
+<i><b>Note:</b> The interpretation for each predictor's impact is over and above the impact of all the other predictors </i>
+
+
+### Limitations and next steps
+As mentioned earlier, these factors are only able to account for a fraction of the variation present in flight delays. Thus, these models do not fit the bill when it comes to predicting flight delays. To improve explainability, more variables would be included. Some examples of such variables are
+
+* the degree to which the airports were busy at the time of the flight
+* hourly weather variables (as opposed to the current day-level ones)
+
+Some of the assumptions were seen to be violated and thus requires further investigating into.
+
+
+##<b>Appendix</b>
+
+###Model Results
+
+####<b>MSP</b>
+```{r, message=FALSE, echo= FALSE}
+summary(model_msp)
+```
+
+####<b>DFW</b>
+```{r, message=FALSE, echo= FALSE}
+summary(model_dfw)
+```
+
+###Residual plots
+We can see from the residual plots that they are not normally distributed for either MSP or DFW.
+
+####<b>MSP</b>
+```{r pressure, echo=FALSE, message=FALSE, warning=FALSE}
+stres = data.frame(rstandard(model_msp))
+colnames(stres) = 'stres'
+ggplot(model_msp, aes (x = model_msp$fitted.values,y = stres$stres, xlab('Fitted Values'), ylab('Std. Residuals'))) + geom_point(colour = 'lightblue') + geom_line( aes(y=c(1)), colour =  'red')
+```
+
+####<b>DFW</b>
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+stres_dfw = data.frame(rstandard(model_dfw))
+colnames(stres_dfw) = 'stres'
+ggplot(model_dfw, aes (x = model_dfw$fitted.values,y = stres_dfw$stres, xlab('Fitted Values'), ylab('Std. Residuals'))) + geom_point(colour = 'lightblue') + geom_line( aes(y=c(1)), colour =  'red')
+```
+
+
+###Residual Normality
+The normality violation is further supported by the normal probability plots
+
+####<b>MSP</b>
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+qqnorm(y = stres$stres , main = "Normal Probability Plot", xlab = "Normal Scores
+", ylab = "Std. Residuals")
+qqline(stres, col = 'red')
+```
+
+####<b>DFW</b>
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+qqnorm(y = stres_dfw$stres , main = "Normal Probability Plot", xlab = "Normal Scores
+", ylab = "Std. Residuals")
+qqline(stres_dfw$stres, col = 'red')
+```
+
+
+
+
+### Correlation matrices
+There is no evidence for high degrees of correlation for either DFW or MSP.
+
+####<b>MSP</b>
+```{r, echo = FALSE}
+cor(model_data[,c(24,41,36,38,30,71,76)])
+```
+
+####<b>DFW</b>
+```{r, echo = FALSE}
+cor(model_data_dfw[,c(24,36,38,53,33,41,70,75)])
+```
